@@ -1,7 +1,6 @@
-# VM
+# SadVM (Serega Aznaur Danila VM)
 register based vm
 
-SadVM (Serega Aznaur Danila VM)
 ==================================================
 build: 
 
