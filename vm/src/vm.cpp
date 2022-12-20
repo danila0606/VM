@@ -51,6 +51,7 @@ void SadVM::execute(uint32_t ins) {
     imm21 = get_imm21(ins);
     imm16 = get_imm16(ins);
 
+    Frame prev_fr, fr;
 
     switch (Opcode(op)) {
         case Opcode::OPCODE_COUNT:
@@ -65,8 +66,11 @@ void SadVM::execute(uint32_t ins) {
             registers[static_cast<int>(Register::PC)] += 4;
             break;
         case Opcode::RET:
-            registers[static_cast<int>(Register::SP)] += 4;
-            registers[static_cast<int>(Register::PC)] = *(uint32_t*)(memspace.data() + registers[static_cast<int>(Register::SP)]);
+            registers[static_cast<int>(Register::FP)] += sizeof(Frame);
+            prev_fr = *(Frame*)(memspace.data() + registers[static_cast<int>(Register::FP)]);
+
+            registers[static_cast<int>(Register::PC)] = prev_fr.source_pc;
+            memcpy(registers.data() + 2 * sizeof(uint32_t), prev_fr.saved_registers, 8 * sizeof(uint32_t));
             break;
 
         case Opcode::ADD:
@@ -201,8 +205,11 @@ void SadVM::execute(uint32_t ins) {
             }
             break;
         case Opcode::CALL:
-            *((uint32_t*)(memspace.data() + registers[static_cast<int>(Register::SP)])) = registers[static_cast<int>(Register::PC)] + 4;
-            registers[static_cast<int>(Register::SP)] -= 4;
+            fr.source_pc = registers[static_cast<int>(Register::PC)] + 4;
+            memcpy(fr.saved_registers, registers.data() + 2 * sizeof(uint32_t), 8 * sizeof(uint32_t));
+
+            *((Frame*)(memspace.data() + registers[static_cast<int>(Register::FP)])) = fr;
+            registers[static_cast<int>(Register::FP)] -= sizeof(Frame);
             registers[static_cast<int>(Register::PC)] = imm21;
             break;
         case Opcode::PRINTC:
