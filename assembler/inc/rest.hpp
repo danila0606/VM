@@ -15,7 +15,7 @@
 #define DATA_SECTION_SIZE (0x2000)
 #define HEAP_STACK_SECTION_START (DATA_SECTION_START + DATA_SECTION_SIZE + 1)
 #define HEAP_STACK_SECTION_STOP (MEMSIZE - 1)
-#define STACK_START HEAP_STACK_SECTION_STOP
+#define STACK_START (0x5000)
 
 static std::vector<unsigned char> int_to_bytes(int32_t value) {
     std::vector<unsigned char> array_of_bytes(4, 0);

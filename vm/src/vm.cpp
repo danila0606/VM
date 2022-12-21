@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <cstring>
 
 #include "vm.hpp"
 
@@ -9,11 +10,11 @@ SadVM::SadVM(const std::vector<uint8_t>& data, const std::vector<uint8_t>& text)
 
     assert(DATA_SECTION_START > TEXT_SECTION_START + text.size());
 
-    memset(memspace.data(), 0, MEMSIZE);
+    //memset(memspace.data(), 0, MEMSIZE);
     int register_count = static_cast<int>(Register::REGISTER_COUNT);
-    memset(registers.data(), 0, register_count * sizeof(uint32_t));
+    //memset(registers.data(), 0, register_count * sizeof(int32_t));
     registers[static_cast<int>(Register::PC)] = TEXT_SECTION_START;
-    registers[static_cast<int>(Register::SP)] = STACK_START;
+    registers[static_cast<int>(Register::FP)] = STACK_START;
 
     for (size_t i = 0; i < text.size(); ++i) {
         memspace[i + TEXT_SECTION_START] = text[i];
@@ -66,7 +67,7 @@ void SadVM::execute(uint32_t ins) {
             registers[static_cast<int>(Register::PC)] += 4;
             break;
         case Opcode::RET:
-            registers[static_cast<int>(Register::FP)] += sizeof(Frame);
+            registers[static_cast<int>(Register::FP)] -= sizeof(Frame);
             prev_fr = *(Frame*)(memspace.data() + registers[static_cast<int>(Register::FP)]);
 
             registers[static_cast<int>(Register::PC)] = prev_fr.source_pc;
@@ -179,7 +180,6 @@ void SadVM::execute(uint32_t ins) {
             printf("%d", registers[r1]);
             registers[static_cast<int>(Register::PC)] += 4;
             break;
-
         case Opcode::J:
             registers[static_cast<int>(Register::PC)] = imm21;
             break;
@@ -206,10 +206,11 @@ void SadVM::execute(uint32_t ins) {
             break;
         case Opcode::CALL:
             fr.source_pc = registers[static_cast<int>(Register::PC)] + 4;
-            memcpy(fr.saved_registers, registers.data() + 2 * sizeof(uint32_t), 8 * sizeof(uint32_t));
+            memcpy(fr.saved_registers, registers.data() + 2 * sizeof(int32_t), 8 * sizeof(int32_t));
+            memcpy(memspace.data() + registers[static_cast<int>(Register::FP)], &fr, sizeof(Frame));
 
-            *((Frame*)(memspace.data() + registers[static_cast<int>(Register::FP)])) = fr;
-            registers[static_cast<int>(Register::FP)] -= sizeof(Frame);
+            //*((Frame*)(memspace.data() + registers[static_cast<int>(Register::FP)])) = fr;
+            registers[static_cast<int>(Register::FP)] += sizeof(Frame);
             registers[static_cast<int>(Register::PC)] = imm21;
             break;
         case Opcode::PRINTC:
