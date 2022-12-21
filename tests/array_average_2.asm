@@ -2,15 +2,18 @@
     li $g0, test_i32
     mov $g8, $g0
     li $g1, (1)
-    li $g2, (120)
+    li $g2, (120) # length
+
+    mov $g3, $g0
+    addi $g3, (120)
 
 
 cycle:
     sw $g1, $g0, (0)
-    addi $g0, (4)
     addi $g1, (1)
+    addi $g0, (4)
 
-    le $g0, $g2
+    le $g0, $g3
     jzs cycle
     
     li $r0, (0)                 # prepare $r0

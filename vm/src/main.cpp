@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <chrono>
 
 #include "vm.hpp"
 #include "../FileFormat/file_format.hpp"
@@ -25,7 +26,11 @@ int main(int argc, char **argv) {
 
     SadVM vm(bin_file.data, bin_file.text);
 
+    auto start = std::chrono::steady_clock::now();
     vm.run();
+    auto end = std::chrono::steady_clock::now();
+    auto ans = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << std::endl << "Time spent = " << ans.count() << " microseconds" << std::endl;
     
     return 0;
 }
