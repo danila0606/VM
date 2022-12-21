@@ -1,8 +1,15 @@
 # SadVM (Serega Aznaur Danila VM)
-register based vm<br />
-
+Register-based staticly-typed virtual machine<br />
 ==================================================<br />
-build: <br />
+Time measurement results:
+
+Average of 30 array elements
+![Screenshot](img/avg.png)
+
+1000-th fibonacci number
+![Screenshot](img/fib.png)
+==================================================<br />
+Build: <br />
 
 1) Assembler: <br />
 cd assembler  <br />
