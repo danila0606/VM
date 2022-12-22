@@ -4,10 +4,10 @@ Register-based staticly-typed virtual machine<br />
 Time measurement results:
 
 Average of 30 array elements
-![Screenshot](img/avg.png)
+![Screenshot](img/avg.jpg)
 
 1000-th fibonacci number
-![Screenshot](img/fib.png)
+![Screenshot](img/fib.jpg)
 ==================================================<br />
 Build: <br />
 
