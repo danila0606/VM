@@ -118,12 +118,14 @@ static InstructionType get_type(Opcode opcode) {
         case Opcode::SW:
         case Opcode::LB:
         case Opcode::SB:
+        case Opcode::GETFIELD:
             return InstructionType::REGISTER_REGISTER_OFFSET;
 
         case Opcode::ADDI:
         case Opcode::MULI:
         case Opcode::DIVI:
         case Opcode::LI:
+        case Opcode::SETFIELD:
             return InstructionType::REGISTER_IMMEDIATE;
 
         case Opcode::JR:
@@ -136,6 +138,7 @@ static InstructionType get_type(Opcode opcode) {
         case Opcode::JZ:
         case Opcode::JZS:
         case Opcode::CALL:
+        case Opcode::NEW:
         case Opcode::PRINTC:
             return InstructionType::IMMEDIATE_NO_REGISTER;
     }
@@ -347,6 +350,9 @@ static Opcode str_to_op(std::string& str) {
     else if (str == "jz")    { op = Opcode::JZ; }
     else if (str == "jzs")   { op = Opcode::JZS; }
     else if (str == "call")  { op = Opcode::CALL; }
+    else if (str == "new")  { op = Opcode::NEW;}
+    else if (str == "setfield")  { op = Opcode::SETFIELD;}
+    else if (str == "getfield")  { op = Opcode::GETFIELD;}
     else if (str == "printc"){ op = Opcode::PRINTC; }
 
     return op;
