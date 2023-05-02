@@ -1,0 +1,77 @@
+// Benchmark for working with objects, pseduocode
+ 
+ 
+class Bar {
+    public a : number
+ 
+    constructor(a : number) {
+        this.a = a
+    }
+}
+ 
+class Foo {
+    private x : number
+    private y : Bar
+ 
+    constructor(x : number) {
+        this.x = x
+        this.y = null
+    }
+ 
+    public getY() : Bar {
+        return this.y
+    }
+ 
+    public setY(b : Bar) : void {
+        this.y = b
+    }
+}
+ 
+dump(foo : Foo[]): void {
+    // If your VM supports several numeric types,
+    // i can be of some some integral type.
+    for (let i : number = 0; i < M; i++) {
+        let f = foo[i]
+ 
+        if (f == null) {
+            print("Foo:null")
+        } else {
+            let b = f.getY()
+            if (b == null) {
+                print("Foo.Bar:null")
+            } else {
+                print(b.y)
+            }
+        }
+    }
+}
+ 
+foo(N : number, M : number) : void {
+    let foo : Foo[] = new Foo[M]
+    let outer : Foo = null
+ 
+    // If your VM supports several numeric types,
+    // i can be of some some integral type.
+    for (let i : number = 1; i <= N; i++) {
+        let o1 = new Foo(i)
+        if (i % 3 == 0) {
+            foo[i % M - 1] = o1
+        }
+ 
+        let o2 = new Bar(i)
+        if (i % 5 == 0) {
+            o1.setY(o2)
+        }
+ 
+        outer = o1
+    }
+ 
+    dump(foo)
+}
+ 
+// Entry point
+main() : void {
+    let N : number = 4_000_000
+    let M : number = 1_000
+    foo(N, M)
+}
