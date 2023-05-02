@@ -45,17 +45,20 @@ enum class Opcode {
     SLL,
     SRL,
     MOV,
+
     // REGISTER_REGISTER_OFFSET
     LW,
     SW,
     LB,
     SB,
+    GETFIELD,
 
     /* REGISTER_IMMEDIATE */
     ADDI,
     MULI,
     DIVI,
     LI,
+    SETFIELD,
 
     /* REGISTER_NO_IMMEDIATE */
     JR,
@@ -70,6 +73,7 @@ enum class Opcode {
     JZ,
     JZS,
     CALL,
+    NEW,
     PUSHI,
     PRINTC,
 
