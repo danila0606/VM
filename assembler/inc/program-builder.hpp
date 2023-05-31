@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cstring>
+#include <map>
 
 #include "token-list.hpp"
 
@@ -23,39 +24,13 @@ struct Symbol {
     unsigned int address;
 };
 
-size_t hash(const char *str) {
-    size_t hash = 5381;
-    int c;
-    while ((c = *str++)) {
-        hash = ((hash << 5) + hash) + c;
-    }
-    return hash;
-}
 
 struct SymTable {
-    std::vector<std::shared_ptr<Symbol>> data;
-    int len = 0;
+    std::map<std::string, std::shared_ptr<Symbol>> data;
 
     std::shared_ptr<Symbol> lookup_symbol(std::string str) {
-        size_t h_idx = hash(str.c_str()) % len;
-        if (data[h_idx]) {
-            if (data[h_idx]->name == str) {
-                return data[h_idx];
-            }
-        }
-        for (int i = h_idx; i < len; ++i) {
-            if (data[i]) {
-                if (data[i]->name == str) {
-                    return data[i];
-                }
-            }
-        }
-        for (int i = 0; i < h_idx; ++i) {
-            if (data[i]) {
-                if (data[i]->name == str) {
-                    return data[i];
-                }
-            }
+        if (data.count(str)) {
+            return data[str];
         }
         return nullptr;
     }
@@ -73,8 +48,10 @@ struct ProgramInfo {
     Section current_section = Section::TEXT;
     SymTable sym_table;
 
+    size_t class_count;
+
     ProgramInfo(size_t new_sym_table_len) {
-        data_idx = 0;
+        data_idx = 4; // 1 byte for number of classes
         data_len = 128;
         data = std::vector<unsigned char>(data_len);
 
@@ -82,8 +59,7 @@ struct ProgramInfo {
         text_len = 128;
         text = std::vector<unsigned char>(text_len);
 
-        sym_table.len = new_sym_table_len;
-        sym_table.data = std::vector<std::shared_ptr<Symbol>>(new_sym_table_len);
+        class_count = 0;
     }
 };
 
@@ -98,9 +74,6 @@ int get_section_offset(std::shared_ptr<ProgramInfo> prog_info) {
 }
 
 std::shared_ptr<Symbol> insert_symbol(std::shared_ptr<ProgramInfo> prog_info, std::shared_ptr<Token> token) {
-    auto len = prog_info->sym_table.len;
-    size_t index = hash(token->str.c_str()) % len;
-
     std::shared_ptr<Symbol> symbol = nullptr;
 
     if ((symbol = prog_info->sym_table.lookup_symbol(token->str))) { 
@@ -117,19 +90,9 @@ std::shared_ptr<Symbol> insert_symbol(std::shared_ptr<ProgramInfo> prog_info, st
         symbol->address = prog_info->data_idx + get_section_offset(prog_info);
     }
 
-    for (size_t i = index; i < len ; ++i) {
-        if (!prog_info->sym_table.data[i]) {
-            prog_info->sym_table.data[i] = symbol;
-            return symbol;
-        }
-    }
-    for (size_t i = 0; i < index; ++i) {
-        if (!prog_info->sym_table.data[i]) {
-            prog_info->sym_table.data[i] = symbol;
-            return symbol;
-        }
-    }
-    return nullptr;
+    prog_info->sym_table.data[token->str] = symbol;
+    
+    return symbol;
 }
 
 bool is_pc_relative(Opcode op) {
@@ -182,6 +145,64 @@ void insert_text_or_data(std::shared_ptr<ProgramInfo> prog_info, uint8_t* thing,
     }
 }
 
+int compile_class_announce(std::shared_ptr<ProgramInfo> prog_info, std::shared_ptr<Token>& token) {
+    if (token->type != TokenType::TOKEN_TYPE_LBRACE) {
+        throw std::runtime_error("After class announce must be it's fields in {}" + std::to_string(token->line_num));
+    }
+    token = token->next;
+
+    std::vector<unsigned char> class_bytes(CLASS_DEF_SIZE, BAD_FLAG);
+    size_t i = 0;
+    size_t class_number = prog_info->class_count++;
+    class_bytes[i++] = class_number; // 1st byte - class number
+
+    // next 7 bytes - class fields
+    while (token->type != TokenType::TOKEN_TYPE_RBRACE) {
+        if (token->type != TokenType::TOKEN_TYPE_DIRECTIVE) {
+            throw std::runtime_error("Only directives can be class' field" + std::to_string(token->line_num));
+        }
+
+        if (token->str == ".i32") {
+            class_bytes[i++] = INT32_FLAG; // int32
+        }
+        else {
+            auto str = token->str;
+            if (isdigit(str[1]) && str.size() == 2) { // 0-9 classes are available now
+                class_bytes[i++] = str[1] - '0';
+            }
+        }
+        token = token->next;
+    }
+    assert(i < 8);
+
+    i = 8;
+    // next 1 byte - label of constructor 
+    auto ctor_label = prog_info->sym_table.lookup_symbol("ctor" + std::to_string(class_number));
+    if (!ctor_label) {
+        throw std::runtime_error("Every class needs ctor!" + std::to_string(token->line_num));
+    }
+    auto ctor_addr = int_to_bytes(ctor_label->address);
+
+    std::copy(ctor_addr.begin(), ctor_addr.end(), class_bytes.begin() + i);
+    i += sizeof(uint32_t);
+
+    // next 7 bytes - methods of class (now only 7)
+    for (size_t j = 0; j < 7; ++j) {
+        auto method = prog_info->sym_table.lookup_symbol("m" + std::to_string(class_number) + "_" + std::to_string(j));
+        if (!method) {
+            break;
+        }
+        else {
+            auto method_addr = int_to_bytes(method->address);
+
+            std::copy(method_addr.begin(), method_addr.end(), class_bytes.begin() + i);
+            i += sizeof(uint32_t);
+        }
+    }
+
+    insert_text_or_data(prog_info, class_bytes.data(), class_bytes.size());
+}
+
 int compile_new_label(std::shared_ptr<ProgramInfo> prog_info, std::shared_ptr<Token>& token) {
     if (prog_info->sym_table.lookup_symbol(token->str)) {
         throw std::runtime_error("Label already defined" + std::to_string(token->line_num));
@@ -206,20 +227,14 @@ int compile_directive(std::shared_ptr<ProgramInfo> prog_info, std::shared_ptr<To
         imm = std::get<Immediate>(token->internal);
         auto bytes = int_to_bytes(imm);
         insert_text_or_data(prog_info, bytes.data(), bytes.size());
-
+     } else if (token->str == ".class") {
+        token = token->next;
+        compile_class_announce(prog_info, token);
     } else if (token->str == ".asciiz") {
         token = token->next;
         compile_new_label(prog_info, token);
         auto bytes = string_to_bytes(token->str);
         insert_text_or_data(prog_info, bytes.data(), bytes.size() - 1);
-
-    // } else if (token->str, ".raw") {
-    //     token = token->next;
-    //     compile_new_label(prog_info, token);
-    //     imm = std::get<Immediate>(token->internal);
-    //     uint8_t* raw_data = new uint8_t[imm]();
-    //     insert_text_or_data(prog_info, raw_data, imm);
-    //     delete raw_data;
 
     } else {
         throw std::runtime_error("Unknown directive" + std::to_string(token->line_num));
@@ -396,6 +411,9 @@ void generate_symbols(std::shared_ptr<ProgramInfo> prog_info, std::shared_ptr<To
 
     prog_info->text_idx = 0;
     prog_info->data_idx = 0;
+    auto classes_count = int_to_bytes(prog_info->class_count);
+    std::copy(classes_count.begin(), classes_count.end(), prog_info->data.begin());
+
     prog_info->current_section = Section::TEXT;
 }
 
@@ -410,9 +428,14 @@ int compile_token(std::shared_ptr<ProgramInfo> prog_info, std::shared_ptr<Token>
         case TokenType::TOKEN_TYPE_NEW_LABEL:
         case TokenType::TOKEN_TYPE_DIRECTIVE:
         case TokenType::TOKEN_TYPE_IMMEDIATE:
+        case TokenType::TOKEN_TYPE_LBRACE:
+        case TokenType::TOKEN_TYPE_RBRACE:
             token = token->next;
             return 0;
         case TokenType::TOKEN_TYPE_INSTR:
             return compile_instruction(prog_info, token);
+        case TokenType::TOKEN_TYPE_EOF:
+            token = token->next;
+            return -1;
     }
 }

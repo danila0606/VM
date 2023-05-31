@@ -12,10 +12,17 @@
 #define TEXT_SECTION_START (0x100)
 #define TEXT_SECTION_SIZE (0x1000)
 #define DATA_SECTION_START (TEXT_SECTION_START + TEXT_SECTION_SIZE + 1)
+#define DATA_SECTION_START (TEXT_SECTION_START + TEXT_SECTION_SIZE) // +1
 #define DATA_SECTION_SIZE (0x2000)
 #define HEAP_STACK_SECTION_START (DATA_SECTION_START + DATA_SECTION_SIZE + 1)
 #define HEAP_STACK_SECTION_STOP (MEMSIZE - 1)
 #define STACK_START (0x5000)
+#define HEAP_STACK_SECTION_START (DATA_SECTION_START + DATA_SECTION_SIZE) // +1
+#define HEAP_STACK_SECTION_SIZE (0x2000)
+#define STACK_START (HEAP_STACK_SECTION_START + HEAP_STACK_SECTION_SIZE) // +1
+
+#define CLASS_DEF_SIZE 0x28 // 40 bytes
+
 
 static std::vector<unsigned char> int_to_bytes(int32_t value) {
     std::vector<unsigned char> array_of_bytes(4, 0);
@@ -112,20 +119,25 @@ static InstructionType get_type(Opcode opcode) {
         case Opcode::SLL:
         case Opcode::SRL:
         case Opcode::MOV:
+        case Opcode::GOA:
+        case Opcode::SOA:
             return InstructionType::REGISTER_REGISTER;
 
         case Opcode::LW:
         case Opcode::SW:
         case Opcode::LB:
         case Opcode::SB:
-        case Opcode::GETFIELD:
+        case Opcode::SFD:
+        case Opcode::GFD:
+        case Opcode::NOBA:
             return InstructionType::REGISTER_REGISTER_OFFSET;
 
         case Opcode::ADDI:
         case Opcode::MULI:
         case Opcode::DIVI:
         case Opcode::LI:
-        case Opcode::SETFIELD:
+        case Opcode::CLM:
+        case Opcode::NOB:
             return InstructionType::REGISTER_IMMEDIATE;
 
         case Opcode::JR:
@@ -138,7 +150,6 @@ static InstructionType get_type(Opcode opcode) {
         case Opcode::JZ:
         case Opcode::JZS:
         case Opcode::CALL:
-        case Opcode::NEW:
         case Opcode::PRINTC:
             return InstructionType::IMMEDIATE_NO_REGISTER;
     }
@@ -303,6 +314,10 @@ static Register str_to_reg(std::string& str) {
     else if (str == "g9") { reg = Register::G9; }
     else if (str == "g10") { reg = Register::G10; }
     else if (str == "g11") { reg = Register::G11; }
+    else if (str == "f0") { reg = Register::F0; }
+    else if (str == "f1") { reg = Register::F1; }
+    else if (str == "f2") { reg = Register::F2; }
+    else if (str == "f3") { reg = Register::F3; }
     else if (str == "r0") { reg = Register::R0; }
     else if (str == "r1") { reg = Register::R1; }
     else if (str == "z")  { reg = Register::Z; }
@@ -350,9 +365,14 @@ static Opcode str_to_op(std::string& str) {
     else if (str == "jz")    { op = Opcode::JZ; }
     else if (str == "jzs")   { op = Opcode::JZS; }
     else if (str == "call")  { op = Opcode::CALL; }
-    else if (str == "new")  { op = Opcode::NEW;}
-    else if (str == "setfield")  { op = Opcode::SETFIELD;}
-    else if (str == "getfield")  { op = Opcode::GETFIELD;}
+    else if (str == "sfd")  { op = Opcode::SFD;}
+    else if (str == "gfd")  { op = Opcode::GFD;}
+    else if (str == "goa")  { op = Opcode::GOA;}
+    else if (str == "clm"){ op = Opcode::CLM; }
+    else if (str == "noba"){ op = Opcode::NOBA; }
+    else if (str == "nob"){ op = Opcode::NOB; }
+    else if (str == "soa"){ op = Opcode::SOA; }
+
     else if (str == "printc"){ op = Opcode::PRINTC; }
 
     return op;

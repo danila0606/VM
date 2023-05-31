@@ -7,6 +7,14 @@
 #define REGISTER_MASK (0x1f)
 #define IMMEDIATE_MASK_21BIT (0x1fffff)
 #define IMMEDIATE_MASK_16BIT (0xffff)
+
+// for parsing data by vm
+#define INT32_FLAG 0xAA
+#define BAD_FLAG 0xFF
+// for parsing data by vm
+#define INT32_FLAG 0xAA
+#define BAD_FLAG 0xFF
+
 #define SIGN_BIT_MASK_32BIT (0x80000000)
 #define SIGN_BIT_MASK_21BIT (0x100000)
 #define SIGN_BIT_MASK_21BIT_TO_32BIT (0xfff00000)
@@ -45,20 +53,25 @@ enum class Opcode {
     SLL,
     SRL,
     MOV,
+    GOA,
+    SOA,
 
     // REGISTER_REGISTER_OFFSET
     LW,
     SW,
     LB,
     SB,
-    GETFIELD,
+    SFD,
+    GFD,
+    NOBA,
 
     /* REGISTER_IMMEDIATE */
     ADDI,
     MULI,
     DIVI,
     LI,
-    SETFIELD,
+    CLM,
+    NOB,
 
     /* REGISTER_NO_IMMEDIATE */
     JR,
@@ -73,7 +86,6 @@ enum class Opcode {
     JZ,
     JZS,
     CALL,
-    NEW,
     PUSHI,
     PRINTC,
 

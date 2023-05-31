@@ -122,7 +122,7 @@ std::shared_ptr<TokenList> tokenize(std::string code) {
             }
             continue;
         }
-        else if ((code[i] == '.') && (i + 1 < code.size()) && isalpha(code[i + 1])) {
+        else if ((code[i] == '.') && (i + 1 < code.size()) && isalnum(code[i + 1])) {
             int start = i;
             ++i;
             for (; (i < code.size()) && (is_part_of_ident(code[i])); ++i);
@@ -151,6 +151,8 @@ std::shared_ptr<TokenList> tokenize(std::string code) {
                 case '$': token_str = "$"; token_type = TokenType::TOKEN_TYPE_DOLLAR; break;
                 case '(': token_str = "("; token_type = TokenType::TOKEN_TYPE_LPAREN; break;
                 case ')': token_str = ")"; token_type = TokenType::TOKEN_TYPE_RPAREN; break;
+                case '{': token_str = "{"; token_type = TokenType::TOKEN_TYPE_LBRACE; break;
+                case '}': token_str = "}"; token_type = TokenType::TOKEN_TYPE_RBRACE; break;
                 default: token_str = "(unknown)"; token_type = TokenType::TOKEN_TYPE_UNKNOWN; break;
             }
             ++i;

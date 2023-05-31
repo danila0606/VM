@@ -20,6 +20,8 @@ enum class TokenType {
     TOKEN_TYPE_DOLLAR,          /* '$' */
     TOKEN_TYPE_LPAREN,          /* '(' */
     TOKEN_TYPE_RPAREN,          /* ')' */
+    TOKEN_TYPE_LBRACE,
+    TOKEN_TYPE_RBRACE,
     TOKEN_TYPE_IDENT,           /* Identifier */
     TOKEN_TYPE_INT_LIT,         /* Integer literal */
     TOKEN_TYPE_FLOAT_LIT,       /* Floating point literal */
@@ -33,6 +35,7 @@ enum class TokenType {
     TOKEN_TYPE_INSTR,           /* Instruction */
     TOKEN_TYPE_REGISTER,        /* Register */
     TOKEN_TYPE_IMMEDIATE,       /* Evaluated constant expression */
+    TOKEN_TYPE_CLASS_ANNOUNCEMENT
 };
 
 struct Token {

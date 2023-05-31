@@ -164,6 +164,8 @@ std::shared_ptr<TokenList> parse(std::shared_ptr<TokenList> list) {
     while (tok && tok->type != TokenType::TOKEN_TYPE_EOF) {
         switch (tok->type) {
             case TokenType::TOKEN_TYPE_COMMA: break;
+            case TokenType::TOKEN_TYPE_LBRACE : self_evals(token_list, tok);break;
+            case TokenType::TOKEN_TYPE_RBRACE : self_evals(token_list, tok);break;
             case TokenType::TOKEN_TYPE_IDENT: parse_ident(token_list, tok); break;
             case TokenType::TOKEN_TYPE_LPAREN: parse_arithmetic_expr(token_list, tok); break;
             case TokenType::TOKEN_TYPE_DOLLAR: parse_register(token_list, tok); break;
