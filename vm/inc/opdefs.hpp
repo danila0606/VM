@@ -52,6 +52,7 @@ enum class Opcode {
     XOR,
     SLL,
     SRL,
+    REM,
     MOV,
     GOA,
     SOA,
@@ -70,7 +71,6 @@ enum class Opcode {
     MULI,
     DIVI,
     LI,
-    CLM,
     NOB,
 
     /* REGISTER_NO_IMMEDIATE */
@@ -88,6 +88,7 @@ enum class Opcode {
     CALL,
     PUSHI,
     PRINTC,
+    CLM,
 
     OPCODE_COUNT
 };

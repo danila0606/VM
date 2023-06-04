@@ -11,12 +11,8 @@
 #define MEMSIZE (0x10000)
 #define TEXT_SECTION_START (0x100)
 #define TEXT_SECTION_SIZE (0x1000)
-#define DATA_SECTION_START (TEXT_SECTION_START + TEXT_SECTION_SIZE + 1)
 #define DATA_SECTION_START (TEXT_SECTION_START + TEXT_SECTION_SIZE) // +1
 #define DATA_SECTION_SIZE (0x2000)
-#define HEAP_STACK_SECTION_START (DATA_SECTION_START + DATA_SECTION_SIZE + 1)
-#define HEAP_STACK_SECTION_STOP (MEMSIZE - 1)
-#define STACK_START (0x5000)
 #define HEAP_STACK_SECTION_START (DATA_SECTION_START + DATA_SECTION_SIZE) // +1
 #define HEAP_STACK_SECTION_SIZE (0x2000)
 #define STACK_START (HEAP_STACK_SECTION_START + HEAP_STACK_SECTION_SIZE) // +1
@@ -118,6 +114,7 @@ static InstructionType get_type(Opcode opcode) {
         case Opcode::XOR:
         case Opcode::SLL:
         case Opcode::SRL:
+        case Opcode::REM:
         case Opcode::MOV:
         case Opcode::GOA:
         case Opcode::SOA:
@@ -136,7 +133,6 @@ static InstructionType get_type(Opcode opcode) {
         case Opcode::MULI:
         case Opcode::DIVI:
         case Opcode::LI:
-        case Opcode::CLM:
         case Opcode::NOB:
             return InstructionType::REGISTER_IMMEDIATE;
 
@@ -151,6 +147,7 @@ static InstructionType get_type(Opcode opcode) {
         case Opcode::JZS:
         case Opcode::CALL:
         case Opcode::PRINTC:
+        case Opcode::CLM:
             return InstructionType::IMMEDIATE_NO_REGISTER;
     }
 
@@ -372,6 +369,7 @@ static Opcode str_to_op(std::string& str) {
     else if (str == "noba"){ op = Opcode::NOBA; }
     else if (str == "nob"){ op = Opcode::NOB; }
     else if (str == "soa"){ op = Opcode::SOA; }
+    else if (str == "rem"){ op = Opcode::REM; }
 
     else if (str == "printc"){ op = Opcode::PRINTC; }
 
